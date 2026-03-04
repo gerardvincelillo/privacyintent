@@ -74,6 +74,7 @@ privacyintent scan https://example.com \
 ## CLI Reference
 
 - `privacyintent scan <url>`
+- `privacyintent ci scan <url>`: Pro CI gate command (requires `privacyintent-pro`)
 - `--json <path>`: write JSON report
 - `--md <path>`: write Markdown report
 - `--timeout <sec>`: browser navigation timeout (default: `30`)

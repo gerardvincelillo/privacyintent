@@ -84,6 +84,7 @@ def scan_site(
     headless: bool,
     user_agent: Optional[str],
     depth: int,
+    print_console_output: bool = True,
 ) -> ScanReport:
     """Capture network artifacts from a target URL with optional shallow crawl."""
     artifacts = ScanArtifacts(root_url=url)
@@ -140,7 +141,8 @@ def scan_site(
     report = ScanReport(artifacts=artifacts, findings=findings)
     report.findings.extend(apply_plugins(report))
     report = apply_privacy_score(report)
-    print_summary(report)
+    if print_console_output:
+        print_summary(report)
 
     if json_path is not None:
         write_json_report(json_path, report)
