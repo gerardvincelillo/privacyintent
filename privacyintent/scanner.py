@@ -11,6 +11,7 @@ from playwright.sync_api import BrowserContext, Response, sync_playwright
 
 from privacyintent.detectors import cookies, headers, pii, third_party
 from privacyintent.models import CookieRecord, HeaderSnapshot, RequestRecord, ResponseRecord, ScanArtifacts, ScanReport
+from privacyintent.scoring.privacy_score import apply_privacy_score
 
 
 def _normalize_headers(headers: dict[str, str] | None) -> dict[str, str]:
@@ -132,4 +133,5 @@ def scan_site(
     findings.extend(cookies.detect(artifacts))
     findings.extend(headers.detect(artifacts))
     findings.extend(pii.detect(artifacts))
-    return ScanReport(artifacts=artifacts, findings=findings)
+    report = ScanReport(artifacts=artifacts, findings=findings)
+    return apply_privacy_score(report)
