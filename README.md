@@ -1,33 +1,50 @@
 ﻿# PrivacyIntent
 
-PrivacyIntent is an open-source CLI that audits websites for privacy leaks, tracker exposure, and risky data handling patterns.
+PrivacyIntent is an open-source Python CLI for privacy-focused web reconnaissance.
+It scans a target URL using a real browser, collects network and cookie evidence,
+and reports privacy risks with severity, confidence, and remediation guidance.
 
-## What It Does
+## Status
 
-- Launches a browser with Playwright and captures request/response traffic.
-- Collects cookie metadata and response headers.
-- Detects:
-  - Third-party request flows
-  - Weak cookie attributes
-  - Missing/weak privacy headers
-  - Potential PII leaks in query params and headers
-  - Common tracker endpoints/scripts with confidence scoring
-- Computes a privacy score (0-100) and highlights top risks.
-- Outputs Rich console summary plus optional JSON and Markdown reports.
+- Repository: public (`privacyintent`)
+- Maturity: `v0.1` baseline
+- Scope: privacy signal collection + heuristic risk detection
 
-## Install
+## Core Capabilities
 
-### pipx
+- Browser-driven scan execution with Playwright (Chromium)
+- Network artifact capture:
+  - requests
+  - responses
+  - response headers
+  - cookie metadata
+- Heuristic detectors:
+  - third-party request classification (`tldextract`)
+  - cookie security posture (`Secure`, `HttpOnly`, `SameSite`, expiration)
+  - privacy/security response headers
+  - potential PII leakage in query params and headers
+  - tracker endpoint/script heuristics with confidence scoring
+- Privacy score calculation (0-100)
+- Top-risk summarization (highest severity findings)
+- Report outputs:
+  - Rich console summary
+  - JSON export
+  - Markdown export
+- Optional plugin hooks via entrypoints (`privacyintent.plugins`)
+
+## Installation
+
+## Prerequisites
+
+- Python 3.11+
+- Chromium browser binary for Playwright
+
+## Install From Source
 
 ```bash
-pipx install privacyintent
-python -m playwright install chromium
-```
-
-### pip
-
-```bash
-pip install privacyintent
+git clone https://github.com/gerardvincelillo/privacyintent.git
+cd privacyintent
+python -m pip install -e .
 python -m playwright install chromium
 ```
 
@@ -35,61 +52,97 @@ python -m playwright install chromium
 
 ```bash
 privacyintent scan https://example.com
+```
+
+With report exports:
+
+```bash
 privacyintent scan https://example.com --json reports/example.json --md reports/example.md
-privacyintent scan https://example.com --timeout 45 --max-requests 300 --depth 1 --no-headless
 ```
 
-## Sample Output
+With advanced options:
+
+```bash
+privacyintent scan https://example.com \
+  --timeout 45 \
+  --max-requests 300 \
+  --depth 1 \
+  --no-headless \
+  --user-agent "Mozilla/5.0 (PrivacyIntent Audit)"
+```
+
+## CLI Reference
+
+- `privacyintent scan <url>`
+- `--json <path>`: write JSON report
+- `--md <path>`: write Markdown report
+- `--timeout <sec>`: browser navigation timeout (default: `30`)
+- `--max-requests <n>`: max captured requests (default: `200`)
+- `--headless/--no-headless`: browser mode (default: `--headless`)
+- `--user-agent <string>`: custom user-agent override
+- `--depth <n>`: same-origin crawl depth (default: `0`)
+
+## Output Model
+
+Each finding includes:
+
+- `id`
+- `severity` (`low|medium|high|critical`)
+- `category` (`cookies|trackers|headers|pii|third_party`)
+- `description`
+- `evidence` (string or structured object)
+- `recommendation`
+- `confidence` (`low|med|high`)
+
+## Architecture
 
 ```text
-PrivacyIntent Summary
-Target: https://example.com
-Requests: 18
-Cookies: 2
-Findings: 6
-Privacy Score: 71/100
-
-Top Risks
-- [HIGH] pii: Potential PII found in request query parameters.
-- [HIGH] headers: Missing content-security-policy header.
-- [MEDIUM] third_party: Request sent to a third-party domain.
+privacyintent/cli.py
+  -> privacyintent/scanner.py
+     -> detectors/
+        - third_party.py
+        - cookies.py
+        - headers.py
+        - pii.py
+        - trackers.py
+     -> scoring/privacy_score.py
+     -> reporting/
+        - console.py
+        - json_report.py
+        - markdown_report.py
+     -> plugins/loader.py
 ```
 
-## Architecture (Text Diagram)
+## Plugin Extensions
 
-```text
-CLI (Typer)
-  -> scanner.py (Playwright capture + crawl)
-    -> detectors/
-       - third_party
-       - cookies
-       - headers
-       - pii
-       - trackers
-    -> scoring/privacy_score.py
-    -> plugins/loader.py (optional entrypoint extensions)
-    -> reporting/
-       - console (Rich)
-       - json_report
-       - markdown_report
-```
-
-## Plugin Hooks
-
-PrivacyIntent can discover optional extensions through Python entrypoints:
+PrivacyIntent supports optional extension discovery via Python entrypoints:
 
 - Group: `privacyintent.plugins`
-- Contract: callable accepting `ScanReport` and returning a list of additional findings
-- Behavior: optional and failure-tolerant (graceful skip)
+- Expected plugin contract: callable taking `ScanReport` and returning a list of additional findings
+- Failure behavior: plugin load/runtime errors are ignored to keep base scanning reliable
 
-## Roadmap
+## OSS vs Pro
 
-- Pro plugin integration for CI/CD privacy gates (planned)
-- Scheduled monitoring with drift/change detection (planned)
-- Policy-as-code enforcement via YAML (planned)
-- Compliance-oriented PDF reports (planned)
-- Enterprise licensing and key management (planned)
+PrivacyIntent Pro now exists as a separate private repository (`privacyintent-pro`).
+
+Open-source `privacyintent` stays focused on:
+
+- core scanning engine
+- transparent detectors
+- developer-friendly local/CI usage
+- extensible plugin surface
+
+Pro capabilities (CI gates, monitoring, policy enforcement, compliance reporting)
+are delivered in the private Pro extension repository.
+
+## Roadmap (Open-Source)
+
+- Improve crawl strategy and request deduplication
+- Expand tracker intelligence sources and confidence scoring
+- Add baseline snapshots and diffable JSON for regression workflows
+- Add tests for detector edge cases and scoring consistency
+- Improve false-positive controls and detector tuning flags
 
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).
