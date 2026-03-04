@@ -143,6 +143,13 @@ are delivered in the private Pro extension repository.
 - Add tests for detector edge cases and scoring consistency
 - Improve false-positive controls and detector tuning flags
 
+## Current Limitations
+
+- Heuristic detections can produce false positives and should be reviewed manually.
+- Crawl strategy is intentionally shallow in `v0.1` and not a full crawler.
+- No built-in persistence layer yet for historical diff analysis.
+- Pro-only enforcement workflows (gates/monitoring/policy/PDF) are not in this OSS repo.
+
 ## License
 
 MIT. See [LICENSE](LICENSE).
