@@ -70,6 +70,10 @@ def ci_scan(
     depth: int = typer.Option(0, "--depth", min=0, help="Basic crawl depth."),
 ) -> None:
     """Run a CI-oriented scan and fail on policy/score violations."""
+    if policy is not None and not policy.exists():
+        typer.echo(f"CI gate policy error: Policy file not found: {policy}")
+        raise typer.Exit(code=2)
+
     report = scan_site(
         url=url,
         json_path=json,
@@ -91,7 +95,14 @@ def ci_scan(
         )
         raise typer.Exit(code=2) from exc
 
-    gate_result = run_ci_gate(report=report, min_score=min_score, policy_path=policy)
+    try:
+        gate_result = run_ci_gate(report=report, min_score=min_score, policy_path=policy)
+    except FileNotFoundError as exc:
+        typer.echo(f"CI gate policy error: {exc}")
+        raise typer.Exit(code=2) from exc
+    except (RuntimeError, ValueError) as exc:
+        typer.echo(f"CI gate execution error: {exc}")
+        raise typer.Exit(code=2) from exc
     status = gate_result.get("status", "fail")
     violations = gate_result.get("violations", [])
 
