@@ -9,8 +9,10 @@ from urllib.parse import urljoin, urlparse
 
 from playwright.sync_api import BrowserContext, Response, sync_playwright
 
-from privacyintent.detectors import cookies, headers, pii, third_party
+from privacyintent.detectors import cookies, headers, pii, third_party, trackers
 from privacyintent.models import CookieRecord, HeaderSnapshot, RequestRecord, ResponseRecord, ScanArtifacts, ScanReport
+from privacyintent.plugins.loader import apply_plugins
+from privacyintent.reporting.console import print_summary
 from privacyintent.reporting.json_report import write_report as write_json_report
 from privacyintent.reporting.markdown_report import write_report as write_markdown_report
 from privacyintent.scoring.privacy_score import apply_privacy_score
@@ -134,8 +136,11 @@ def scan_site(
     findings.extend(cookies.detect(artifacts))
     findings.extend(headers.detect(artifacts))
     findings.extend(pii.detect(artifacts))
+    findings.extend(trackers.detect(artifacts))
     report = ScanReport(artifacts=artifacts, findings=findings)
+    report.findings.extend(apply_plugins(report))
     report = apply_privacy_score(report)
+    print_summary(report)
 
     if json_path is not None:
         write_json_report(json_path, report)

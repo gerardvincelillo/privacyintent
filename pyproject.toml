@@ -9,6 +9,10 @@ version = "0.1.0"
 description = "Open-source CLI to audit websites for privacy leaks and tracker risks."
 readme = "README.md"
 requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Gerard Vince Lillo" },
+]
 dependencies = [
   "typer>=0.12.0",
   "rich>=13.7.0",
@@ -19,6 +23,10 @@ dependencies = [
 
 [project.scripts]
 privacyintent = "privacyintent.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/gerardvincelillo/privacyintent"
+Repository = "https://github.com/gerardvincelillo/privacyintent"
 
 [tool.setuptools.packages.find]
 include = ["privacyintent*"]
