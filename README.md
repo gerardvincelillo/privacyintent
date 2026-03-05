@@ -54,6 +54,12 @@ python -m playwright install chromium
 privacyintent scan https://example.com
 ```
 
+With reduced setup (profile + auto artifacts):
+
+```bash
+privacyintent scan example.com --profile deep --artifacts-dir reports
+```
+
 With report exports:
 
 ```bash
@@ -78,11 +84,14 @@ privacyintent scan https://example.com \
 - `privacyintent compare <baseline.json> <current.json>`: compare privacy drift between reports
 - `--json <path>`: write JSON report
 - `--md <path>`: write Markdown report
+- `--gate-json <path>`: write CI gate result JSON (CI command)
 - `--timeout <sec>`: browser navigation timeout (default: `30`)
 - `--max-requests <n>`: max captured requests (default: `200`)
 - `--headless/--no-headless`: browser mode (default: `--headless`)
 - `--user-agent <string>`: custom user-agent override
 - `--depth <n>`: same-origin crawl depth (default: `0`)
+- `--profile <quick|standard|deep>`: apply tuned scan defaults
+- `--artifacts-dir <path>`: auto-generate scan artifacts (and CI gate JSON in CI mode)
 - `--quiet`: disable console summary output for scan automation
 
 ## Output Model

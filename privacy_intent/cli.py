@@ -9,6 +9,7 @@ from typing import Optional
 
 import typer
 
+from privacy_intent.automation import build_auto_report_paths, normalize_target_url, resolve_scan_options
 from privacy_intent.reporting.diff_report import compare_reports
 from privacy_intent.scanner import scan_site
 
@@ -34,28 +35,47 @@ def scan(
         "--md",
         help="Write a Markdown report to the given path.",
     ),
-    timeout: int = typer.Option(30, "--timeout", min=1, help="Request timeout in seconds."),
-    max_requests: int = typer.Option(
-        200,
+    timeout: Optional[int] = typer.Option(None, "--timeout", min=1, help="Request timeout in seconds."),
+    max_requests: Optional[int] = typer.Option(
+        None,
         "--max-requests",
         min=1,
         help="Maximum number of requests to collect.",
     ),
     headless: bool = typer.Option(True, "--headless/--no-headless", help="Run browser headless."),
     user_agent: Optional[str] = typer.Option(None, "--user-agent", help="Override browser user agent."),
-    depth: int = typer.Option(0, "--depth", min=0, help="Basic crawl depth."),
+    depth: Optional[int] = typer.Option(None, "--depth", min=0, help="Basic crawl depth."),
+    profile: str = typer.Option("standard", "--profile", help="Scan profile: quick|standard|deep."),
+    artifacts_dir: Optional[Path] = typer.Option(
+        None,
+        "--artifacts-dir",
+        help="Auto-generate JSON/Markdown reports in this directory when no --json/--md is provided.",
+    ),
     quiet: bool = typer.Option(False, "--quiet", help="Disable console scan summary output."),
 ) -> None:
     """Scan a URL for privacy risks."""
-    scan_site(
-        url=url,
-        json_path=json,
-        md_path=md,
+    normalized_url = normalize_target_url(url)
+    effective_timeout, effective_max_requests, effective_depth = resolve_scan_options(
+        profile=profile,
         timeout=timeout,
         max_requests=max_requests,
+        depth=depth,
+    )
+
+    json_path = json
+    md_path = md
+    if artifacts_dir is not None and json_path is None and md_path is None:
+        json_path, md_path = build_auto_report_paths(normalized_url, artifacts_dir)
+
+    scan_site(
+        url=normalized_url,
+        json_path=json_path,
+        md_path=md_path,
+        timeout=effective_timeout,
+        max_requests=effective_max_requests,
         headless=headless,
         user_agent=user_agent,
-        depth=depth,
+        depth=effective_depth,
         print_console_output=not quiet,
     )
 
@@ -97,26 +117,50 @@ def ci_scan(
     policy: Optional[Path] = typer.Option(None, "--policy", help="Optional policy file path."),
     json: Optional[Path] = typer.Option(None, "--json", help="Write a JSON report to the given path."),
     md: Optional[Path] = typer.Option(None, "--md", help="Write a Markdown report to the given path."),
-    timeout: int = typer.Option(30, "--timeout", min=1, help="Request timeout in seconds."),
-    max_requests: int = typer.Option(200, "--max-requests", min=1, help="Maximum number of requests to collect."),
+    gate_json: Optional[Path] = typer.Option(None, "--gate-json", help="Write CI gate result JSON to path."),
+    artifacts_dir: Optional[Path] = typer.Option(
+        None,
+        "--artifacts-dir",
+        help="Auto-generate scan and gate artifacts in this directory when paths are omitted.",
+    ),
+    timeout: Optional[int] = typer.Option(None, "--timeout", min=1, help="Request timeout in seconds."),
+    max_requests: Optional[int] = typer.Option(None, "--max-requests", min=1, help="Maximum number of requests to collect."),
     headless: bool = typer.Option(True, "--headless/--no-headless", help="Run browser headless."),
     user_agent: Optional[str] = typer.Option(None, "--user-agent", help="Override browser user agent."),
-    depth: int = typer.Option(0, "--depth", min=0, help="Basic crawl depth."),
+    depth: Optional[int] = typer.Option(None, "--depth", min=0, help="Basic crawl depth."),
+    profile: str = typer.Option("standard", "--profile", help="Scan profile: quick|standard|deep."),
 ) -> None:
     """Run a CI-oriented scan and fail on policy/score violations."""
     if policy is not None and not policy.exists():
         typer.echo(f"CI gate policy error: Policy file not found: {policy}")
         raise typer.Exit(code=2)
 
-    report = scan_site(
-        url=url,
-        json_path=json,
-        md_path=md,
+    normalized_url = normalize_target_url(url)
+    effective_timeout, effective_max_requests, effective_depth = resolve_scan_options(
+        profile=profile,
         timeout=timeout,
         max_requests=max_requests,
+        depth=depth,
+    )
+
+    json_path = json
+    md_path = md
+    gate_json_path = gate_json
+    if artifacts_dir is not None:
+        if json_path is None and md_path is None:
+            json_path, md_path = build_auto_report_paths(normalized_url, artifacts_dir)
+        if gate_json_path is None:
+            gate_json_path = artifacts_dir / "ci_gate_result.json"
+
+    report = scan_site(
+        url=normalized_url,
+        json_path=json_path,
+        md_path=md_path,
+        timeout=effective_timeout,
+        max_requests=effective_max_requests,
         headless=headless,
         user_agent=user_agent,
-        depth=depth,
+        depth=effective_depth,
         print_console_output=True,
     )
 
@@ -151,6 +195,10 @@ def ci_scan(
         typer.echo("- Violations:")
         for violation in violations:
             typer.echo(f"  - {violation}")
+    if gate_json_path is not None:
+        gate_json_path.parent.mkdir(parents=True, exist_ok=True)
+        gate_json_path.write_text(json_lib.dumps(gate_result, indent=2), encoding="utf-8")
+        typer.echo(f"- Gate JSON: {gate_json_path}")
 
     if status != "pass":
         raise typer.Exit(code=1)
