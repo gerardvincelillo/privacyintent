@@ -75,6 +75,7 @@ privacyintent scan https://example.com \
 
 - `privacyintent scan <url>`
 - `privacyintent ci scan <url>`: Pro CI gate command (requires `privacy-intent-pro`)
+- `privacyintent compare <baseline.json> <current.json>`: compare privacy drift between reports
 - `--json <path>`: write JSON report
 - `--md <path>`: write Markdown report
 - `--timeout <sec>`: browser navigation timeout (default: `30`)
@@ -82,6 +83,7 @@ privacyintent scan https://example.com \
 - `--headless/--no-headless`: browser mode (default: `--headless`)
 - `--user-agent <string>`: custom user-agent override
 - `--depth <n>`: same-origin crawl depth (default: `0`)
+- `--quiet`: disable console summary output for scan automation
 
 ## Output Model
 

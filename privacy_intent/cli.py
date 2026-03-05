@@ -3,11 +3,13 @@
 
 from __future__ import annotations
 
+import json as json_lib
 from pathlib import Path
 from typing import Optional
 
 import typer
 
+from privacy_intent.reporting.diff_report import compare_reports
 from privacy_intent.scanner import scan_site
 
 app = typer.Typer(help="PrivacyIntent CLI for website privacy auditing.")
@@ -42,6 +44,7 @@ def scan(
     headless: bool = typer.Option(True, "--headless/--no-headless", help="Run browser headless."),
     user_agent: Optional[str] = typer.Option(None, "--user-agent", help="Override browser user agent."),
     depth: int = typer.Option(0, "--depth", min=0, help="Basic crawl depth."),
+    quiet: bool = typer.Option(False, "--quiet", help="Disable console scan summary output."),
 ) -> None:
     """Scan a URL for privacy risks."""
     scan_site(
@@ -53,7 +56,38 @@ def scan(
         headless=headless,
         user_agent=user_agent,
         depth=depth,
+        print_console_output=not quiet,
     )
+
+
+@app.command("compare")
+def compare(
+    baseline: Path = typer.Argument(..., exists=True, dir_okay=False, help="Baseline JSON report path."),
+    current: Path = typer.Argument(..., exists=True, dir_okay=False, help="Current JSON report path."),
+    json: Optional[Path] = typer.Option(None, "--json", help="Write comparison JSON output."),
+) -> None:
+    """Compare two JSON scan reports and summarize privacy drift."""
+    baseline_report = json_lib.loads(baseline.read_text(encoding="utf-8"))
+    current_report = json_lib.loads(current.read_text(encoding="utf-8"))
+    result = compare_reports(baseline_report, current_report)
+
+    typer.echo("Privacy Drift Summary")
+    typer.echo(f"- Score: {result['baseline_score']} -> {result['current_score']} ({result['score_delta']:+d})")
+    typer.echo(
+        f"- Findings: {result['baseline_total_findings']} -> "
+        f"{result['current_total_findings']} ({result['total_findings_delta']:+d})"
+    )
+    typer.echo(f"- New High/Critical Findings: {result['new_high_or_critical']}")
+    if result["new_categories"]:
+        typer.echo(f"- New Categories: {', '.join(result['new_categories'])}")
+    if result["new_finding_ids"]:
+        typer.echo("- New Finding IDs:")
+        for finding_id in result["new_finding_ids"]:
+            typer.echo(f"  - {finding_id}")
+
+    if json is not None:
+        json.parent.mkdir(parents=True, exist_ok=True)
+        json.write_text(json_lib.dumps(result, indent=2), encoding="utf-8")
 
 
 @ci_app.command("scan")
