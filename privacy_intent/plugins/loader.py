@@ -1,4 +1,4 @@
-﻿
+
 """Optional plugin discovery and execution."""
 
 from __future__ import annotations
@@ -6,7 +6,7 @@ from __future__ import annotations
 from importlib.metadata import entry_points
 from typing import Callable
 
-from privacyintent.models import ScanReport
+from privacy_intent.models import ScanReport
 
 PluginFunc = Callable[[ScanReport], list]
 
@@ -39,3 +39,5 @@ def apply_plugins(report: ScanReport) -> list:
         except Exception:
             continue
     return findings
+
+

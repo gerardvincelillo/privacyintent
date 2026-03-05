@@ -1,4 +1,4 @@
-﻿
+
 """Rich console reporting."""
 
 from __future__ import annotations
@@ -7,7 +7,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-from privacyintent.models import ScanReport
+from privacy_intent.models import ScanReport
 
 SEVERITY_STYLE = {
     "low": "green",
@@ -49,3 +49,4 @@ def print_summary(report: ScanReport) -> None:
         console.print(risks)
     else:
         console.print(Panel("No major risks identified.", title="Top Risks"))
+

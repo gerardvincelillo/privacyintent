@@ -1,4 +1,4 @@
-﻿
+
 """Third-party request detection."""
 
 from __future__ import annotations
@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 import tldextract
 
-from privacyintent.models import Finding, ScanArtifacts
+from privacy_intent.models import Finding, ScanArtifacts
 
 
 def _registered_domain(url: str) -> str:
@@ -36,3 +36,4 @@ def detect(artifacts: ScanArtifacts) -> list[Finding]:
             )
         )
     return findings
+

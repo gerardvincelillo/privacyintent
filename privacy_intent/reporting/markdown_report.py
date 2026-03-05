@@ -1,11 +1,11 @@
-﻿
+
 """Markdown report writer."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from privacyintent.models import ScanReport
+from privacy_intent.models import ScanReport
 
 
 def write_report(path: Path, report: ScanReport) -> None:
@@ -42,3 +42,4 @@ def write_report(path: Path, report: ScanReport) -> None:
             lines.append("")
 
     path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+

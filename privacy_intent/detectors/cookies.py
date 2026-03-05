@@ -1,11 +1,11 @@
-﻿
+
 """Cookie security checks."""
 
 from __future__ import annotations
 
 from time import time
 
-from privacyintent.models import Finding, ScanArtifacts
+from privacy_intent.models import Finding, ScanArtifacts
 
 
 def detect(artifacts: ScanArtifacts) -> list[Finding]:
@@ -42,3 +42,4 @@ def detect(artifacts: ScanArtifacts) -> list[Finding]:
             )
         )
     return findings
+

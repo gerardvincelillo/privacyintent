@@ -1,9 +1,9 @@
-﻿
+
 """Tracker endpoint detection heuristics."""
 
 from __future__ import annotations
 
-from privacyintent.models import Finding, ScanArtifacts
+from privacy_intent.models import Finding, ScanArtifacts
 
 TRACKER_SUBSTRINGS = [
     "analytics",
@@ -56,3 +56,4 @@ def detect(artifacts: ScanArtifacts) -> list[Finding]:
         )
         counter += 1
     return findings
+

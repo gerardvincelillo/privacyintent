@@ -1,4 +1,4 @@
-﻿
+
 """PII leak detection heuristics."""
 
 from __future__ import annotations
@@ -6,7 +6,7 @@ from __future__ import annotations
 import re
 from urllib.parse import parse_qsl, urlparse
 
-from privacyintent.models import Finding, ScanArtifacts
+from privacy_intent.models import Finding, ScanArtifacts
 
 PII_KEYWORDS = {
     "email",
@@ -82,3 +82,4 @@ def detect(artifacts: ScanArtifacts) -> list[Finding]:
                 counter += 1
 
     return findings
+

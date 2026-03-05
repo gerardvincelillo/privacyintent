@@ -1,4 +1,4 @@
-﻿# PrivacyIntent
+# PrivacyIntent
 
 PrivacyIntent is an open-source Python CLI for privacy-focused web reconnaissance.
 It scans a target URL using a real browser, collects network and cookie evidence,
@@ -42,8 +42,8 @@ and reports privacy risks with severity, confidence, and remediation guidance.
 ### Install From Source
 
 ```bash
-git clone https://github.com/gerardvincelillo/privacyintent.git
-cd privacyintent
+git clone https://github.com/gerardvincelillo/privacy-intent.git
+cd privacy-intent
 python -m pip install -e .
 python -m playwright install chromium
 ```
@@ -74,7 +74,7 @@ privacyintent scan https://example.com \
 ## CLI Reference
 
 - `privacyintent scan <url>`
-- `privacyintent ci scan <url>`: Pro CI gate command (requires `privacyintent-pro`)
+- `privacyintent ci scan <url>`: Pro CI gate command (requires `privacy-intent-pro`)
 - `--json <path>`: write JSON report
 - `--md <path>`: write Markdown report
 - `--timeout <sec>`: browser navigation timeout (default: `30`)
@@ -98,8 +98,8 @@ Each finding includes:
 ## Architecture
 
 ```text
-privacyintent/cli.py
-  -> privacyintent/scanner.py
+privacy_intent/cli.py
+  -> privacy_intent/scanner.py
      -> detectors/
         - third_party.py
         - cookies.py
@@ -124,7 +124,7 @@ PrivacyIntent supports optional extension discovery via Python entrypoints:
 
 ## OSS vs Pro
 
-PrivacyIntent Pro now exists as a separate private repository (`privacyintent-pro`).
+PrivacyIntent Pro now exists as a separate private repository (`privacy-intent-pro`).
 
 Open-source `privacyintent` stays focused on:
 
@@ -154,3 +154,4 @@ are delivered in the private Pro extension repository.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+

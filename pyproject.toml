@@ -22,11 +22,12 @@ dependencies = [
 ]
 
 [project.scripts]
-privacyintent = "privacyintent.cli:app"
+privacyintent = "privacy_intent.cli:app"
 
 [project.urls]
-Homepage = "https://github.com/gerardvincelillo/privacyintent"
-Repository = "https://github.com/gerardvincelillo/privacyintent"
+Homepage = "https://github.com/gerardvincelillo/privacy-intent"
+Repository = "https://github.com/gerardvincelillo/privacy-intent"
 
 [tool.setuptools.packages.find]
-include = ["privacyintent*"]
+include = ["privacy_intent*"]
+

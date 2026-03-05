@@ -1,4 +1,4 @@
-﻿"""Scanning orchestrator."""
+"""Scanning orchestrator."""
 
 from __future__ import annotations
 
@@ -9,13 +9,13 @@ from urllib.parse import urljoin, urlparse
 
 from playwright.sync_api import BrowserContext, Response, sync_playwright
 
-from privacyintent.detectors import cookies, headers, pii, third_party, trackers
-from privacyintent.models import CookieRecord, HeaderSnapshot, RequestRecord, ResponseRecord, ScanArtifacts, ScanReport
-from privacyintent.plugins.loader import apply_plugins
-from privacyintent.reporting.console import print_summary
-from privacyintent.reporting.json_report import write_report as write_json_report
-from privacyintent.reporting.markdown_report import write_report as write_markdown_report
-from privacyintent.scoring.privacy_score import apply_privacy_score
+from privacy_intent.detectors import cookies, headers, pii, third_party, trackers
+from privacy_intent.models import CookieRecord, HeaderSnapshot, RequestRecord, ResponseRecord, ScanArtifacts, ScanReport
+from privacy_intent.plugins.loader import apply_plugins
+from privacy_intent.reporting.console import print_summary
+from privacy_intent.reporting.json_report import write_report as write_json_report
+from privacy_intent.reporting.markdown_report import write_report as write_markdown_report
+from privacy_intent.scoring.privacy_score import apply_privacy_score
 
 
 def _normalize_headers(headers: dict[str, str] | None) -> dict[str, str]:
@@ -149,3 +149,4 @@ def scan_site(
     if md_path is not None:
         write_markdown_report(md_path, report)
     return report
+

@@ -1,9 +1,9 @@
-﻿
+
 """Privacy scoring logic."""
 
 from __future__ import annotations
 
-from privacyintent.models import Finding, ScanReport
+from privacy_intent.models import Finding, ScanReport
 
 SEVERITY_WEIGHTS = {
     "low": 3,
@@ -35,3 +35,4 @@ def apply_privacy_score(report: ScanReport) -> ScanReport:
     report.score = max(0, min(100, round(100 - total_penalty)))
     report.top_risks = sorted(report.findings, key=_risk_rank, reverse=True)[:3]
     return report
+

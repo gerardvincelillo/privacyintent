@@ -1,4 +1,4 @@
-﻿
+
 """CLI entrypoint for PrivacyIntent."""
 
 from __future__ import annotations
@@ -8,7 +8,7 @@ from typing import Optional
 
 import typer
 
-from privacyintent.scanner import scan_site
+from privacy_intent.scanner import scan_site
 
 app = typer.Typer(help="PrivacyIntent CLI for website privacy auditing.")
 ci_app = typer.Typer(help="PrivacyIntent CI gate commands (requires PrivacyIntent Pro).")
@@ -87,7 +87,7 @@ def ci_scan(
     )
 
     try:
-        from privacyintent_pro.ci_gate import run_ci_gate
+        from privacy_intent_pro.ci_gate import run_ci_gate
     except Exception as exc:
         typer.echo(
             "PrivacyIntent Pro is required for `privacyintent ci scan`. "
@@ -127,3 +127,5 @@ app.add_typer(ci_app, name="ci")
 
 if __name__ == "__main__":
     app()
+
+

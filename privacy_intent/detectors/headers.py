@@ -1,9 +1,9 @@
-﻿
+
 """HTTP header privacy checks."""
 
 from __future__ import annotations
 
-from privacyintent.models import Finding, ScanArtifacts
+from privacy_intent.models import Finding, ScanArtifacts
 
 REQUIRED_HEADERS = {
     "referrer-policy": {"strict-origin-when-cross-origin", "strict-origin", "no-referrer"},
@@ -55,3 +55,4 @@ def detect(artifacts: ScanArtifacts) -> list[Finding]:
                 )
             )
     return findings
+
