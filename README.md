@@ -60,6 +60,12 @@ With reduced setup (profile + auto artifacts):
 privacyintent scan example.com --profile deep --artifacts-dir reports
 ```
 
+Initialize starter files (config, policy, artifacts dir):
+
+```bash
+privacyintent init --path .
+```
+
 With report exports:
 
 ```bash
@@ -82,8 +88,11 @@ privacyintent scan https://example.com \
 - `privacyintent scan <url>`
 - `privacyintent ci scan <url>`: Pro CI gate command (requires `privacy-intent-pro`)
 - `privacyintent compare <baseline.json> <current.json>`: compare privacy drift between reports
+- `privacyintent monitor diff --baseline <a> --current <b>`: evaluate privacy drift for automation
+- `privacyintent init --path <dir>`: scaffold starter config/policy/artifacts
 - `--json <path>`: write JSON report
 - `--md <path>`: write Markdown report
+- `--sarif <path>`: write SARIF report for code scanning integrations
 - `--gate-json <path>`: write CI gate result JSON (CI command)
 - `--timeout <sec>`: browser navigation timeout (default: `30`)
 - `--max-requests <n>`: max captured requests (default: `200`)
@@ -93,6 +102,17 @@ privacyintent scan https://example.com \
 - `--profile <quick|standard|deep>`: apply tuned scan defaults
 - `--artifacts-dir <path>`: auto-generate scan artifacts (and CI gate JSON in CI mode)
 - `--quiet`: disable console summary output for scan automation
+
+## Automation Examples
+
+Fail pipeline on regression:
+
+```bash
+privacyintent monitor diff \
+  --baseline reports/baseline.json \
+  --current reports/current.json \
+  --fail-on-regression
+```
 
 ## Output Model
 

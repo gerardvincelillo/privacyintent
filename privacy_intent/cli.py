@@ -10,11 +10,13 @@ from typing import Optional
 import typer
 
 from privacy_intent.automation import build_auto_report_paths, normalize_target_url, resolve_scan_options
+from privacy_intent.bootstrap import init_workspace
 from privacy_intent.reporting.diff_report import compare_reports
 from privacy_intent.scanner import scan_site
 
 app = typer.Typer(help="PrivacyIntent CLI for website privacy auditing.")
 ci_app = typer.Typer(help="PrivacyIntent CI gate commands (requires PrivacyIntent Pro).")
+monitor_app = typer.Typer(help="PrivacyIntent monitoring and drift commands.")
 
 
 @app.callback()
@@ -34,6 +36,11 @@ def scan(
         None,
         "--md",
         help="Write a Markdown report to the given path.",
+    ),
+    sarif: Optional[Path] = typer.Option(
+        None,
+        "--sarif",
+        help="Write a SARIF report to the given path.",
     ),
     timeout: Optional[int] = typer.Option(None, "--timeout", min=1, help="Request timeout in seconds."),
     max_requests: Optional[int] = typer.Option(
@@ -64,13 +71,16 @@ def scan(
 
     json_path = json
     md_path = md
+    sarif_path = sarif
     if artifacts_dir is not None and json_path is None and md_path is None:
         json_path, md_path = build_auto_report_paths(normalized_url, artifacts_dir)
+        sarif_path = artifacts_dir / f"{json_path.stem}.sarif.json"
 
     scan_site(
         url=normalized_url,
         json_path=json_path,
         md_path=md_path,
+        sarif_path=sarif_path,
         timeout=effective_timeout,
         max_requests=effective_max_requests,
         headless=headless,
@@ -117,6 +127,7 @@ def ci_scan(
     policy: Optional[Path] = typer.Option(None, "--policy", help="Optional policy file path."),
     json: Optional[Path] = typer.Option(None, "--json", help="Write a JSON report to the given path."),
     md: Optional[Path] = typer.Option(None, "--md", help="Write a Markdown report to the given path."),
+    sarif: Optional[Path] = typer.Option(None, "--sarif", help="Write a SARIF report to the given path."),
     gate_json: Optional[Path] = typer.Option(None, "--gate-json", help="Write CI gate result JSON to path."),
     artifacts_dir: Optional[Path] = typer.Option(
         None,
@@ -145,10 +156,12 @@ def ci_scan(
 
     json_path = json
     md_path = md
+    sarif_path = sarif
     gate_json_path = gate_json
     if artifacts_dir is not None:
         if json_path is None and md_path is None:
             json_path, md_path = build_auto_report_paths(normalized_url, artifacts_dir)
+            sarif_path = artifacts_dir / f"{json_path.stem}.sarif.json"
         if gate_json_path is None:
             gate_json_path = artifacts_dir / "ci_gate_result.json"
 
@@ -156,6 +169,7 @@ def ci_scan(
         url=normalized_url,
         json_path=json_path,
         md_path=md_path,
+        sarif_path=sarif_path,
         timeout=effective_timeout,
         max_requests=effective_max_requests,
         headless=headless,
@@ -204,7 +218,65 @@ def ci_scan(
         raise typer.Exit(code=1)
 
 
+@app.command("init")
+def init(
+    path: Path = typer.Option(Path("."), "--path", help="Target directory to initialize."),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing starter files."),
+) -> None:
+    """Create starter config, policy, and report artifact paths."""
+    result = init_workspace(path.resolve(), force=force)
+    typer.echo("PrivacyIntent workspace initialized")
+    typer.echo(f"- Path: {path.resolve()}")
+    typer.echo(f"- Created: {len(result['created'])}")
+    for item in result["created"]:
+        typer.echo(f"  - {item}")
+    if result["skipped"]:
+        typer.echo(f"- Skipped: {len(result['skipped'])}")
+
+
+@monitor_app.command("diff")
+def monitor_diff(
+    baseline: Path = typer.Option(..., "--baseline", exists=True, dir_okay=False, help="Baseline JSON report path."),
+    current: Path = typer.Option(..., "--current", exists=True, dir_okay=False, help="Current JSON report path."),
+    json: Optional[Path] = typer.Option(None, "--json", help="Write drift JSON output."),
+    fail_on_regression: bool = typer.Option(
+        False,
+        "--fail-on-regression",
+        help="Exit with code 1 when regression is detected.",
+    ),
+) -> None:
+    """Compare two reports and optionally fail if privacy posture regresses."""
+    baseline_report = json_lib.loads(baseline.read_text(encoding="utf-8"))
+    current_report = json_lib.loads(current.read_text(encoding="utf-8"))
+    result = compare_reports(baseline_report, current_report)
+
+    regression_reasons: list[str] = []
+    if int(result.get("score_delta", 0)) < 0:
+        regression_reasons.append("Privacy score decreased.")
+    if int(result.get("new_high_or_critical", 0)) > 0:
+        regression_reasons.append("New high/critical findings detected.")
+    regression = bool(regression_reasons)
+    result["regression"] = regression
+    result["regression_reasons"] = regression_reasons
+
+    typer.echo("Monitor Drift Summary")
+    typer.echo(f"- Regression: {'YES' if regression else 'NO'}")
+    typer.echo(f"- Score delta: {result.get('score_delta', 0):+d}")
+    typer.echo(f"- New High/Critical: {result.get('new_high_or_critical', 0)}")
+    if regression_reasons:
+        typer.echo("- Reasons:")
+        for reason in regression_reasons:
+            typer.echo(f"  - {reason}")
+
+    if json is not None:
+        json.parent.mkdir(parents=True, exist_ok=True)
+        json.write_text(json_lib.dumps(result, indent=2), encoding="utf-8")
+    if fail_on_regression and regression:
+        raise typer.Exit(code=1)
+
+
 app.add_typer(ci_app, name="ci")
+app.add_typer(monitor_app, name="monitor")
 
 
 if __name__ == "__main__":
