@@ -43,6 +43,14 @@ def _collect_links_from_page(page_url: str, links: list[str]) -> list[str]:
     return normalized
 
 
+def _safe_request_initiator(request) -> Optional[str]:
+    try:
+        frame = request.frame
+    except Exception:
+        return None
+    return frame.url if frame else None
+
+
 def _attach_network_listeners(context: BrowserContext, artifacts: ScanArtifacts, max_requests: int) -> None:
     def on_request(request) -> None:
         if len(artifacts.requests) >= max_requests:
@@ -52,7 +60,7 @@ def _attach_network_listeners(context: BrowserContext, artifacts: ScanArtifacts,
                 method=request.method,
                 url=request.url,
                 resource_type=request.resource_type,
-                initiator=request.frame.url if request.frame else None,
+                initiator=_safe_request_initiator(request),
                 headers=_normalize_headers(request.headers),
                 post_data=request.post_data,
             )
