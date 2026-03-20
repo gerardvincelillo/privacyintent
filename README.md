@@ -187,3 +187,9 @@ are delivered in the private Pro extension repository.
 
 MIT. See [LICENSE](LICENSE).
 
+## Docs
+
+- `docs/README.md`: docs index for the repository
+- `docs/IMPLEMENTATION-CHECKLIST.md`
+- `docs/PROJECT-VISION.md`
+- `docs/STACK-INVENTORY.md`
